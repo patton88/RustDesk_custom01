@@ -130,6 +130,12 @@ jobs:
           channel: "stable"
           flutter-version: ${{ env.FLUTTER_VERSION }}
 
+      - name: Verify Flutter installation
+        run: |
+          Write-Host "Verifying Flutter installation..."
+          flutter --version
+          Write-Host "Flutter installation verified successfully"
+
       - name: Check Flutter project status
         run: |
           Write-Host "Checking Flutter project status..."
