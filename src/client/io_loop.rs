@@ -1510,6 +1510,7 @@ impl<T: InvokeUiSession> Remote<T> {
                                             let overwrite_strategy =
                                                 job.default_overwrite_strategy();
                                             match fs::is_write_need_confirmation(
+                                                false, // is_resume: not resuming, starting fresh
                                                 &write_path,
                                                 &digest,
                                             ) {

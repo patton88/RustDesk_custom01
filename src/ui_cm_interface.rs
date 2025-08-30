@@ -878,7 +878,7 @@ async fn handle_fs(
                 if let Some(file) = job.files().get(file_num as usize) {
                     if let fs::DataSource::FilePath(p) = &job.data_source {
                         let path = get_string(&fs::TransferJob::join(p, &file.name));
-                        match is_write_need_confirmation(&path, &digest) {
+                        match is_write_need_confirmation(false, &path, &digest) {
                             Ok(digest_result) => {
                                 match digest_result {
                                     DigestCheckResult::IsSame => {
