@@ -41,6 +41,7 @@ jobs:
         uses: dtolnay/rust-toolchain@v1
         with:
           toolchain: ${{ env.BRIDGE_RUST_VERSION }}
+          components: "rustfmt"
 
       - name: Generate bridge files
         run: |
