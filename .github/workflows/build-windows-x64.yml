@@ -35,6 +35,15 @@ jobs:
           cd flutter
           flutter pub get
           dart run build_runner build
+          # Create generated directory if it doesn't exist
+          mkdir -p lib/generated
+          # Copy generated files to generated directory
+          if [ -f lib/generated_bridge.dart ]; then
+            cp lib/generated_bridge.dart lib/generated/
+          fi
+          if [ -d lib/generated ]; then
+            ls -la lib/generated/
+          fi
 
       - name: Upload bridge files
         uses: actions/upload-artifact@master
@@ -57,6 +66,15 @@ jobs:
         with:
           name: bridge-artifact
           path: flutter/lib/generated/
+
+      - name: Copy bridge files to lib directory
+        run: |
+          if [ -f flutter/lib/generated/generated_bridge.dart ]; then
+            cp flutter/lib/generated/generated_bridge.dart flutter/lib/
+            echo "Bridge file restored successfully"
+          else
+            echo "No bridge file found, will generate during build"
+          fi
 
       - name: Install LLVM and Clang
         uses: KyleMayes/install-llvm-action@v1
