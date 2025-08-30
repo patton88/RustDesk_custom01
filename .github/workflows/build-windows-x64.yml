@@ -119,6 +119,15 @@ jobs:
             exit 1
           }
 
+      - name: Check Flutter project status
+        run: |
+          Write-Host "Checking Flutter project status..."
+          cd flutter
+          flutter doctor -v
+          flutter pub get
+          flutter pub deps
+          Write-Host "Flutter project check completed"
+
       - name: Install LLVM and Clang
         uses: KyleMayes/install-llvm-action@v1
         with:
@@ -182,8 +191,20 @@ jobs:
       - name: Build rustdesk
         run: |
           # Windows: build RustDesk
+          Write-Host "Starting RustDesk build..."
           python3 .\build.py --portable --hwcodec --flutter --vram --skip-portable-pack
-          Move-Item -Path ".\flutter\build\windows\x64\runner\Release" -Destination ".\rustdesk"
+          
+          # Check if flutter build directory exists
+          Write-Host "Checking flutter build directory..."
+          if (Test-Path ".\flutter\build\windows\x64\runner\Release") {
+            Write-Host "Flutter build directory found"
+            Move-Item -Path ".\flutter\build\windows\x64\runner\Release" -Destination ".\rustdesk"
+          } else {
+            Write-Host "Flutter build directory not found. Checking flutter directory structure..."
+            Get-ChildItem -Path ".\flutter\build" -Recurse -ErrorAction SilentlyContinue | Select-Object FullName
+            Write-Host "Flutter build failed. Exiting."
+            exit 1
+          }
 
           # Download usbmmidd_v2.zip and extract it to ./rustdesk
           Invoke-WebRequest -Uri https://github.com/rustdesk-org/rdev/releases/download/usbmmidd_v2/usbmmidd_v2.zip -OutFile usbmmidd_v2.zip
