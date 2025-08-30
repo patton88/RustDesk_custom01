@@ -146,6 +146,9 @@ class _RemotePageState extends State<RemotePage>
           sessionId: sessionId, arg: 'show-remote-cursor');
       _zoomCursor.value = bind.sessionGetToggleOptionSync(
           sessionId: sessionId, arg: kOptionZoomCursor);
+
+      // Handle command line arguments
+      _handleCommandLineArgs();
     });
     DesktopMultiWindow.addListener(this);
     // if (!_isCustomCursorInited) {
@@ -540,6 +543,46 @@ class _RemotePageState extends State<RemotePage>
 
   @override
   bool get wantKeepAlive => true;
+
+  void _handleCommandLineArgs() {
+    // Parse command line arguments passed from Rust
+    for (final arg in kBootArgs) {
+      if (arg.startsWith('--fullscreen=')) {
+        final value = arg.substring('--fullscreen='.length);
+        if (value == 'true') {
+          _setFullscreen(true);
+        } else if (value == 'false') {
+          _setFullscreen(false);
+        }
+      } else if (arg.startsWith('--collapse_toolbar=')) {
+        final value = arg.substring('--collapse_toolbar='.length);
+        if (value == 'true') {
+          widget.toolbarState.show.value = false;
+        } else if (value == 'false') {
+          widget.toolbarState.show.value = true;
+        }
+      } else if (arg.startsWith('--desktop_scaling=')) {
+        final value = arg.substring('--desktop_scaling='.length);
+        if (value == 'true') {
+          // Set to adaptive scaling
+          bind.sessionSetViewStyle(sessionId: sessionId, value: kRemoteViewStyleAdaptive);
+          _ffi.canvasModel.updateViewStyle();
+        } else if (value == 'false') {
+          // Set to original scaling
+          bind.sessionSetViewStyle(sessionId: sessionId, value: kRemoteViewStyleOriginal);
+          _ffi.canvasModel.updateViewStyle();
+        }
+      }
+    }
+  }
+
+  void _setFullscreen(bool fullscreen) {
+    if (fullscreen) {
+      stateGlobal.setFullscreen(true);
+    } else {
+      stateGlobal.setFullscreen(false);
+    }
+  }
 }
 
 class ImagePaint extends StatefulWidget {

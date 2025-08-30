@@ -498,6 +498,31 @@ class RustdeskImpl {
         ]));
   }
 
+  // New functions for handling command line arguments
+  Future<void> sessionSetFullscreen(
+      {required UuidValue sessionId, required bool fullscreen, dynamic hint}) {
+    return Future(() => js.context.callMethod('setByName', [
+          'set_fullscreen',
+          jsonEncode({'fullscreen': fullscreen})
+        ]));
+  }
+
+  Future<void> sessionSetToolbarCollapsed(
+      {required UuidValue sessionId, required bool collapsed, dynamic hint}) {
+    return Future(() => js.context.callMethod('setByName', [
+          'set_toolbar_collapsed',
+          jsonEncode({'collapsed': collapsed})
+        ]));
+  }
+
+  Future<void> sessionSetDesktopScaling(
+      {required UuidValue sessionId, required bool scaling, dynamic hint}) {
+    return Future(() => js.context.callMethod('setByName', [
+          'set_desktop_scaling',
+          jsonEncode({'scaling': scaling})
+        ]));
+  }
+
   Future<String> sessionGetPeerOption(
       {required UuidValue sessionId, required String name, dynamic hint}) {
     return Future(

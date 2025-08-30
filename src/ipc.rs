@@ -284,6 +284,13 @@ pub enum Data {
     ControllingSessionCount(usize),
     #[cfg(target_os = "linux")]
     TerminalSessionCount(usize),
+    // New command line argument handlers
+    #[cfg(feature = "flutter")]
+    SetFullscreen(bool),
+    #[cfg(feature = "flutter")]
+    SetToolbarCollapsed(bool),
+    #[cfg(feature = "flutter")]
+    SetDesktopScaling(bool),
     #[cfg(target_os = "windows")]
     PortForwardSessionCount(Option<usize>),
     SocksWs(Option<Box<(Option<config::Socks5Server>, String)>>),
@@ -748,6 +755,25 @@ async fn handle(data: Data, stream: &mut Connection) {
             _ => {
                 // Port forward session count is only a get value.
             }
+        },
+        // Handle new command line argument messages
+        #[cfg(feature = "flutter")]
+        Data::SetFullscreen(fullscreen) => {
+            // Handle fullscreen setting
+            log::info!("Setting fullscreen: {}", fullscreen);
+            // This would typically update the UI state
+        },
+        #[cfg(feature = "flutter")]
+        Data::SetToolbarCollapsed(collapsed) => {
+            // Handle toolbar collapsed setting
+            log::info!("Setting toolbar collapsed: {}", collapsed);
+            // This would typically update the UI state
+        },
+        #[cfg(feature = "flutter")]
+        Data::SetDesktopScaling(scaling) => {
+            // Handle desktop scaling setting
+            log::info!("Setting desktop scaling: {}", scaling);
+            // This would typically update the UI state
         },
         _ => {}
     }

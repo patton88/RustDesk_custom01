@@ -44,6 +44,10 @@ pub fn core_main() -> Option<Vec<String>> {
     let mut _is_flutter_invoke_new_connection = false;
     let mut no_server = false;
     let mut arg_exe = Default::default();
+    let mut fullscreen_mode: Option<bool> = None;
+    let mut collapse_toolbar: Option<bool> = None;
+    let mut desktop_scaling: Option<bool> = None;
+
     for arg in std::env::args() {
         if i == 0 {
             arg_exe = arg;
@@ -61,7 +65,30 @@ pub fn core_main() -> Option<Vec<String>> {
             {
                 _is_flutter_invoke_new_connection = true;
             }
-            if arg == "--elevate" {
+
+            // Handle new command line arguments
+            if arg.starts_with("--fullscreen=") {
+                let value = arg.strip_prefix("--fullscreen=").unwrap_or("");
+                fullscreen_mode = match value {
+                    "true" => Some(true),
+                    "false" => Some(false),
+                    _ => None,
+                };
+            } else if arg.starts_with("--collapse_toolbar=") {
+                let value = arg.strip_prefix("--collapse_toolbar=").unwrap_or("");
+                collapse_toolbar = match value {
+                    "true" => Some(true),
+                    "false" => Some(false),
+                    _ => None,
+                };
+            } else if arg.starts_with("--desktop_scaling=") {
+                let value = arg.strip_prefix("--desktop_scaling=").unwrap_or("");
+                desktop_scaling = match value {
+                    "true" => Some(true),
+                    "false" => Some(false),
+                    _ => None,
+                };
+            } else if arg == "--elevate" {
                 _is_elevate = true;
             } else if arg == "--run-as-system" {
                 _is_run_as_system = true;
@@ -600,11 +627,36 @@ pub fn core_main() -> Option<Vec<String>> {
             }
         }
     }
-    //_async_logger_holder.map(|x| x.flush());
+
+    // Add new command line arguments to flutter_args for Flutter builds
     #[cfg(feature = "flutter")]
-    return Some(flutter_args);
+    {
+        if let Some(fullscreen) = fullscreen_mode {
+            flutter_args.push(format!("--fullscreen={}", if fullscreen { "true" } else { "false" }));
+        }
+        if let Some(collapse) = collapse_toolbar {
+            flutter_args.push(format!("--collapse_toolbar={}", if collapse { "true" } else { "false" }));
+        }
+        if let Some(scaling) = desktop_scaling {
+            flutter_args.push(format!("--desktop_scaling={}", if scaling { "true" } else { "false" }));
+        }
+        return Some(flutter_args);
+    }
+
+    // Add new command line arguments to args for non-Flutter builds
     #[cfg(not(feature = "flutter"))]
-    return Some(args);
+    {
+        if let Some(fullscreen) = fullscreen_mode {
+            args.push(format!("--fullscreen={}", if fullscreen { "true" } else { "false" }));
+        }
+        if let Some(collapse) = collapse_toolbar {
+            args.push(format!("--collapse_toolbar={}", if collapse { "true" } else { "false" }));
+        }
+        if let Some(scaling) = desktop_scaling {
+            args.push(format!("--desktop_scaling={}", if scaling { "true" } else { "false" }));
+        }
+        return Some(args);
+    }
 }
 
 #[inline]

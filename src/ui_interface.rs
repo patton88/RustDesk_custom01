@@ -1526,3 +1526,34 @@ pub fn clear_trusted_devices() {
 pub fn max_encrypt_len() -> usize {
     hbb_common::config::ENCRYPT_MAX_LEN
 }
+
+// New functions for handling command line arguments
+#[cfg(feature = "flutter")]
+pub fn set_fullscreen(fullscreen: bool) {
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    {
+        if let Ok(sender) = SENDER.lock() {
+            let _ = sender.send(ipc::Data::SetFullscreen(fullscreen));
+        }
+    }
+}
+
+#[cfg(feature = "flutter")]
+pub fn set_toolbar_collapsed(collapsed: bool) {
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    {
+        if let Ok(sender) = SENDER.lock() {
+            let _ = sender.send(ipc::Data::SetToolbarCollapsed(collapsed));
+        }
+    }
+}
+
+#[cfg(feature = "flutter")]
+pub fn set_desktop_scaling(scaling: bool) {
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    {
+        if let Ok(sender) = SENDER.lock() {
+            let _ = sender.send(ipc::Data::SetDesktopScaling(scaling));
+        }
+    }
+}
