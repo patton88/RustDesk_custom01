@@ -85,7 +85,7 @@ jobs:
       - name: Initialize submodules
         run: |
           git submodule update --init --recursive
-          ls -la libs/hbb_common/
+          dir libs\hbb_common
 
       - name: Restore bridge files
         uses: actions/download-artifact@master
@@ -95,12 +95,12 @@ jobs:
 
       - name: Copy bridge files to lib directory
         run: |
-          if [ -f flutter/lib/generated/generated_bridge.dart ]; then
-            cp flutter/lib/generated/generated_bridge.dart flutter/lib/
-            echo "Bridge file restored successfully"
-          else
-            echo "No bridge file found, will generate during build"
-          fi
+          if (Test-Path flutter\lib\generated\generated_bridge.dart) {
+            Copy-Item flutter\lib\generated\generated_bridge.dart flutter\lib\
+            Write-Host "Bridge file restored successfully"
+          } else {
+            Write-Host "No bridge file found, will generate during build"
+          }
 
       - name: Install LLVM and Clang
         uses: KyleMayes/install-llvm-action@v1
