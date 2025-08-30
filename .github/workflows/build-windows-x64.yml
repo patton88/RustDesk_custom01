@@ -119,15 +119,6 @@ jobs:
             exit 1
           }
 
-      - name: Check Flutter project status
-        run: |
-          Write-Host "Checking Flutter project status..."
-          cd flutter
-          flutter doctor -v
-          flutter pub get
-          flutter pub deps
-          Write-Host "Flutter project check completed"
-
       - name: Install LLVM and Clang
         uses: KyleMayes/install-llvm-action@v1
         with:
@@ -138,6 +129,15 @@ jobs:
         with:
           channel: "stable"
           flutter-version: ${{ env.FLUTTER_VERSION }}
+
+      - name: Check Flutter project status
+        run: |
+          Write-Host "Checking Flutter project status..."
+          cd flutter
+          flutter doctor -v
+          flutter pub get
+          flutter pub deps
+          Write-Host "Flutter project check completed"
 
       - name: Replace engine with rustdesk custom flutter engine
         run: |
