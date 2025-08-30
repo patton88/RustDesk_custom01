@@ -150,7 +150,7 @@ jobs:
         env:
           VCPKG_DEFAULT_HOST_TRIPLET: x64-windows-static
         run: |
-          if (!$env:VCPKG_ROOT/vcpkg install --triplet x64-windows-static --x-install-root="$env:VCPKG_ROOT/installed") {
+          if (!(& "$env:VCPKG_ROOT\vcpkg.exe" install --triplet x64-windows-static --x-install-root="$env:VCPKG_ROOT\installed")) {
             Get-ChildItem -Path "$env:VCPKG_ROOT" -Recurse -Filter "*.log" | ForEach-Object {
               Write-Host "$($_.FullName):"
               Write-Host "======"
@@ -160,7 +160,7 @@ jobs:
             }
             exit 1
           }
-          Get-Content "$env:VCPKG_ROOT/buildtrees/ffmpeg/build-x64-windows-static-rel-out.log" -Head 100 -ErrorAction SilentlyContinue
+          Get-Content "$env:VCPKG_ROOT\buildtrees\ffmpeg\build-x64-windows-static-rel-out.log" -Head 100 -ErrorAction SilentlyContinue
 
       - name: Build rustdesk
         run: |
