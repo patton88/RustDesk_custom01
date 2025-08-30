@@ -9,6 +9,7 @@ on:
 
 env:
   RUST_VERSION: "1.75"
+  BRIDGE_RUST_VERSION: "1.82"
   FLUTTER_VERSION: "3.24.5"
   LLVM_VERSION: "15.0.6"
   VCPKG_COMMIT_ID: "6f29f12e82a8293156836ad81cc9bf5af41fe836"
@@ -30,10 +31,10 @@ jobs:
           channel: "stable"
           flutter-version: ${{ env.FLUTTER_VERSION }}
 
-      - name: Install Rust
+      - name: Install Rust for bridge generation
         uses: dtolnay/rust-toolchain@v1
         with:
-          toolchain: ${{ env.RUST_VERSION }}
+          toolchain: ${{ env.BRIDGE_RUST_VERSION }}
 
       - name: Generate bridge files
         run: |
