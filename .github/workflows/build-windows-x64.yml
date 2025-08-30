@@ -49,8 +49,10 @@ jobs:
           flutter pub get
           # Install flutter_rust_bridge_codegen
           cargo install flutter_rust_bridge_codegen --version 1.80.1 --features uuid
-          # Generate bridge files
-          ~/.cargo/bin/flutter_rust_bridge_codegen --rust-input ../src/flutter_ffi.rs --dart-output ./lib/generated_bridge.dart
+          # Generate bridge files (same as original bridge.yml)
+          ~/.cargo/bin/flutter_rust_bridge_codegen --rust-input ../src/flutter_ffi.rs --dart-output ./lib/generated_bridge.dart --c-output ./macos/Runner/bridge_generated.h
+          # Copy header files
+          cp ./macos/Runner/bridge_generated.h ./ios/Runner/bridge_generated.h
           # Create generated directory if it doesn't exist
           mkdir -p lib/generated
           # Copy generated files to generated directory
@@ -69,7 +71,13 @@ jobs:
         uses: actions/upload-artifact@master
         with:
           name: bridge-artifact
-          path: flutter/lib/generated/
+          path: |
+            ./src/bridge_generated.rs
+            ./src/bridge_generated.io.rs
+            ./flutter/lib/generated_bridge.dart
+            ./flutter/lib/generated_bridge.freezed.dart
+            ./flutter/macos/Runner/bridge_generated.h
+            ./flutter/ios/Runner/bridge_generated.h
 
   build-windows-x64:
     name: Build Windows x64
@@ -91,15 +99,24 @@ jobs:
         uses: actions/download-artifact@master
         with:
           name: bridge-artifact
-          path: flutter/lib/generated/
+          path: ./
 
-      - name: Copy bridge files to lib directory
+      - name: Copy bridge files to correct locations
         run: |
-          if (Test-Path flutter\lib\generated\generated_bridge.dart) {
-            Copy-Item flutter\lib\generated\generated_bridge.dart flutter\lib\
-            Write-Host "Bridge file restored successfully"
+          # Copy Rust bridge files
+          if (Test-Path src\bridge_generated.rs) {
+            Write-Host "Rust bridge files restored successfully"
           } else {
-            Write-Host "No bridge file found, will generate during build"
+            Write-Host "No Rust bridge files found"
+            exit 1
+          }
+          
+          # Copy Dart bridge files
+          if (Test-Path flutter\lib\generated_bridge.dart) {
+            Write-Host "Dart bridge files restored successfully"
+          } else {
+            Write-Host "No Dart bridge files found"
+            exit 1
           }
 
       - name: Install LLVM and Clang
