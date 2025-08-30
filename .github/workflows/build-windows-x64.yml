@@ -30,16 +30,28 @@ jobs:
           channel: "stable"
           flutter-version: ${{ env.FLUTTER_VERSION }}
 
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@v1
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+
       - name: Generate bridge files
         run: |
           cd flutter
           flutter pub get
-          dart run build_runner build
+          # Install flutter_rust_bridge_codegen
+          cargo install flutter_rust_bridge_codegen --version 1.80.1 --features uuid
+          # Generate bridge files
+          ~/.cargo/bin/flutter_rust_bridge_codegen --rust-input ../src/flutter_ffi.rs --dart-output ./lib/generated_bridge.dart
           # Create generated directory if it doesn't exist
           mkdir -p lib/generated
           # Copy generated files to generated directory
           if [ -f lib/generated_bridge.dart ]; then
             cp lib/generated_bridge.dart lib/generated/
+            echo "Bridge file generated successfully"
+          else
+            echo "Failed to generate bridge file"
+            exit 1
           fi
           if [ -d lib/generated ]; then
             ls -la lib/generated/
