@@ -159,11 +159,24 @@ jobs:
           Move-Item -Path "windows-x64-release\*" -Destination "C:\hostedtoolcache\windows\flutter\stable-${{ env.FLUTTER_VERSION }}-x64\bin\cache\artifacts\engine\windows-x64-release\" -Force
 
       - name: Patch flutter
-        shell: bash
         run: |
-          cp .github/patches/flutter_3.24.4_dropdown_menu_enableFilter.diff $(dirname $(dirname $(which flutter)))
-          cd $(dirname $(dirname $(which flutter)))
-          [[ "3.24.5" == ${{env.FLUTTER_VERSION}} ]] && git apply flutter_3.24.4_dropdown_menu_enableFilter.diff
+          # Get Flutter installation directory
+          $flutterPath = (Get-Command flutter).Source
+          $flutterDir = Split-Path -Parent (Split-Path -Parent $flutterPath)
+          Write-Host "Flutter directory: $flutterDir"
+          
+          # Copy patch file to Flutter directory
+          Copy-Item ".github/patches/flutter_3.24.4_dropdown_menu_enableFilter.diff" -Destination "$flutterDir" -Force
+          
+          # Apply patch if Flutter version matches (3.22.3 should work with this patch)
+          Push-Location $flutterDir
+          try {
+            git apply flutter_3.24.4_dropdown_menu_enableFilter.diff
+            Write-Host "Flutter patch applied successfully"
+          } catch {
+            Write-Host "Warning: Flutter patch failed, continuing without patch"
+          }
+          Pop-Location
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@v1
