@@ -165,16 +165,24 @@ jobs:
           $flutterDir = Split-Path -Parent (Split-Path -Parent $flutterPath)
           Write-Host "Flutter directory: $flutterDir"
           
+          # Check if patch is needed for this Flutter version
+          $flutterVersion = $env:FLUTTER_VERSION
+          Write-Host "Flutter version: $flutterVersion"
+          
           # Copy patch file to Flutter directory
           Copy-Item ".github/patches/flutter_3.24.4_dropdown_menu_enableFilter.diff" -Destination "$flutterDir" -Force
           
-          # Apply patch if Flutter version matches (3.22.3 should work with this patch)
+          # Apply patch with proper error handling
           Push-Location $flutterDir
-          try {
-            git apply flutter_3.24.4_dropdown_menu_enableFilter.diff
+          $patchResult = git apply flutter_3.24.4_dropdown_menu_enableFilter.diff 2>&1
+          $patchExitCode = $LASTEXITCODE
+          
+          if ($patchExitCode -eq 0) {
             Write-Host "Flutter patch applied successfully"
-          } catch {
-            Write-Host "Warning: Flutter patch failed, continuing without patch"
+          } else {
+            Write-Host "Warning: Flutter patch failed (exit code: $patchExitCode)"
+            Write-Host "Patch output: $patchResult"
+            Write-Host "Continuing without patch - this is expected for Flutter $flutterVersion"
           }
           Pop-Location
 
