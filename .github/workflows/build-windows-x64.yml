@@ -142,6 +142,14 @@ jobs:
           channel: "stable"
           flutter-version: ${{ env.FLUTTER_VERSION }}
 
+      - name: Fix Flutter dependencies
+        run: |
+          # Fix extended_text version to be compatible with Dart 3.4.4
+          pushd flutter
+          (Get-Content pubspec.yaml) -replace 'extended_text: 14\.0\.0', 'extended_text: 13.0.0' | Set-Content pubspec.yaml
+          flutter pub get
+          popd
+
       - name: Replace engine with rustdesk custom flutter engine
         run: |
           flutter doctor -v
