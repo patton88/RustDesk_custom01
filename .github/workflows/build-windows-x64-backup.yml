@@ -12,7 +12,7 @@ env:
   FLUTTER_VERSION: "3.24.5"
   LLVM_VERSION: "15.0.6"
   VCPKG_COMMIT_ID: "6f29f12e82a8293156836ad81cc9bf5af41fe836"
-  VERSION: "1.4.4-custom"
+  VERSION: "1.4.3-custom"
   VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
 
 jobs:
@@ -135,7 +135,7 @@ jobs:
           version: ${{ env.LLVM_VERSION }}
 
       - name: Install Flutter
-        uses: subosito/flutter-action@v2.12.0
+        uses: subosito/flutter-action@v2.12.0 #https://github.com/subosito/flutter-action/issues/277
         with:
           channel: "stable"
           flutter-version: ${{ env.FLUTTER_VERSION }}
@@ -265,14 +265,83 @@ jobs:
           # Create a zip file with the executable
           Compress-Archive -Path ./rustdesk/* -DestinationPath ./RustDesk-Windows-x64-${{ env.VERSION }}.zip
 
-      - name: Upload release package
+                   - name: Upload release package
         uses: actions/upload-artifact@master
         with:
           name: RustDesk-Windows-x64-Package
           path: RustDesk-Windows-x64-${{ env.VERSION }}.zip
 
+      - name: Test GitHub Token Permissions
+        run: |
+           Write-Host "=== GitHub Token权限测试 ===" -ForegroundColor Green
+           
+           # 测试1: 检查仓库访问权限
+           Write-Host "`n1. 测试仓库访问权限..." -ForegroundColor Yellow
+           try {
+               $response = Invoke-RestMethod -Uri "https://api.github.com/repos/${{ github.repository }}" -Headers @{Authorization = "token ${{ secrets.GITHUB_TOKEN }}"}
+               Write-Host "✅ 仓库访问权限: 正常" -ForegroundColor Green
+               Write-Host "   仓库名称: $($response.full_name)"
+               Write-Host "   权限: $($response.permissions.admin) (admin), $($response.permissions.push) (push), $($response.permissions.pull) (pull)"
+           } catch {
+               Write-Host "❌ 仓库访问权限: 失败" -ForegroundColor Red
+               Write-Host "   错误: $($_.Exception.Message)"
+           }
+           
+           # 测试2: 检查标签列表权限
+           Write-Host "`n2. 测试标签列表权限..." -ForegroundColor Yellow
+           try {
+               $response = Invoke-RestMethod -Uri "https://api.github.com/repos/${{ github.repository }}/tags" -Headers @{Authorization = "token ${{ secrets.GITHUB_TOKEN }}"}
+               Write-Host "✅ 标签列表权限: 正常" -ForegroundColor Green
+               Write-Host "   标签数量: $($response.Count)"
+           } catch {
+               Write-Host "❌ 标签列表权限: 失败" -ForegroundColor Red
+               Write-Host "   错误: $($_.Exception.Message)"
+           }
+           
+           # 测试3: 检查Release列表权限
+           Write-Host "`n3. 测试Release列表权限..." -ForegroundColor Yellow
+           try {
+               $response = Invoke-RestMethod -Uri "https://api.github.com/repos/${{ github.repository }}/releases" -Headers @{Authorization = "token ${{ secrets.GITHUB_TOKEN }}"}
+               Write-Host "✅ Release列表权限: 正常" -ForegroundColor Green
+               Write-Host "   Release数量: $($response.Count)"
+           } catch {
+               Write-Host "❌ Release列表权限: 失败" -ForegroundColor Red
+               Write-Host "   错误: $($_.Exception.Message)"
+           }
+           
+           # 测试4: 检查用户权限
+           Write-Host "`n4. 测试用户权限..." -ForegroundColor Yellow
+           try {
+               $response = Invoke-RestMethod -Uri "https://api.github.com/user" -Headers @{Authorization = "token ${{ secrets.GITHUB_TOKEN }}"}
+               Write-Host "✅ 用户权限: 正常" -ForegroundColor Green
+               Write-Host "   用户名: $($response.login)"
+           } catch {
+               Write-Host "❌ 用户权限: 失败" -ForegroundColor Red
+               Write-Host "   错误: $($_.Exception.Message)"
+           }
+           
+           Write-Host "`n=== 测试完成 ===" -ForegroundColor Green
+
+      - name: Check if tag exists
+        id: check_tag
+         run: |
+           $tagExists = $false
+           try {
+             $response = Invoke-RestMethod -Uri "https://api.github.com/repos/${{ github.repository }}/tags" -Headers @{Authorization = "token ${{ secrets.GITHUB_TOKEN }}"}
+             foreach ($tag in $response) {
+               if ($tag.name -eq "v${{ env.VERSION }}") {
+                 $tagExists = $true
+                 break
+               }
+             }
+           } catch {
+             Write-Host "Error checking tags: $($_.Exception.Message)"
+           }
+           echo "tag_exists=$tagExists" >> $env:GITHUB_OUTPUT
+           Write-Host "Tag v${{ env.VERSION }} exists: $tagExists"
+
       - name: Create Release
-        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master' && steps.check_tag.outputs.tag_exists != 'true'
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ env.VERSION }}
@@ -304,3 +373,9 @@ jobs:
           prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}
           fail_on_unmatched_files: false
+
+      - name: Skip Release (tag exists)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master' && steps.check_tag.outputs.tag_exists == 'true'
+        run: |
+          Write-Host "Tag v${{ env.VERSION }} already exists, skipping release creation"
+          Write-Host "You can manually create a release or update the VERSION environment variable"
