@@ -12,7 +12,7 @@ env:
   FLUTTER_VERSION: "3.24.5"
   LLVM_VERSION: "15.0.6"
   VCPKG_COMMIT_ID: "6f29f12e82a8293156836ad81cc9bf5af41fe836"
-  VERSION: "1.4.2-custom"
+  VERSION: "1.4.3-custom"
   VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
 
 jobs:
