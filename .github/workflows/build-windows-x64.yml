@@ -67,10 +67,8 @@ jobs:
           cargo install cargo-expand --version 1.0.95 --locked
           cargo install flutter_rust_bridge_codegen --version 1.80.1 --features "uuid" --locked
           
-          # Fix Flutter dependencies
+          # Get Flutter dependencies
           pushd flutter
-          sed -i -e 's/extended_text: 14.0.0/extended_text: 13.0.0/g' pubspec.yaml
-          sed -i -e 's/flutter_rust_bridge: 1.80.1/flutter_rust_bridge: 1.80.1/g' pubspec.yaml
           flutter pub get
           popd
 
@@ -144,12 +142,8 @@ jobs:
 
       - name: Fix Flutter dependencies
         run: |
-          # Fix extended_text version to be compatible with Dart 3.4.4
+          # Clean Flutter build cache
           pushd flutter
-          (Get-Content pubspec.yaml) -replace 'extended_text: 14\.0\.0', 'extended_text: 13.0.0' | Set-Content pubspec.yaml
-          flutter pub get
-          
-          # Clean Flutter build cache (still in flutter directory)
           Write-Host "Cleaning Flutter build cache..."
           flutter clean
           flutter pub get
