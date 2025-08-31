@@ -24,6 +24,7 @@ import '../widgets/tabbar_widget.dart';
 
 import 'package:flutter_hbb/native/custom_cursor.dart'
     if (dart.library.html) 'package:flutter_hbb/web/custom_cursor.dart';
+import '../../main.dart';
 
 final SimpleWrapper<bool> _firstEnterImage = SimpleWrapper(false);
 
