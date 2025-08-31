@@ -148,12 +148,12 @@ jobs:
           pushd flutter
           (Get-Content pubspec.yaml) -replace 'extended_text: 14\.0\.0', 'extended_text: 13.0.0' | Set-Content pubspec.yaml
           flutter pub get
-          popd
           
-          # Clean Flutter build cache
+          # Clean Flutter build cache (still in flutter directory)
           Write-Host "Cleaning Flutter build cache..."
           flutter clean
           flutter pub get
+          popd
 
       - name: Replace engine with rustdesk custom flutter engine
         run: |
