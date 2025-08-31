@@ -66,17 +66,37 @@ jobs:
         run: |
           cargo install cargo-expand --version 1.0.95 --locked
           cargo install flutter_rust_bridge_codegen --version 1.80.1 --features "uuid" --locked
-          pushd flutter && sed -i -e 's/extended_text: 14.0.0/extended_text: 13.0.0/g' pubspec.yaml && flutter pub get && popd
-          # Also patch the pubspec.yaml to fix dependency issues
-          pushd flutter && sed -i -e 's/flutter_rust_bridge: 1.80.1/flutter_rust_bridge: 1.80.1/g' pubspec.yaml && popd
+          
+          # Fix Flutter dependencies
+          pushd flutter
+          sed -i -e 's/extended_text: 14.0.0/extended_text: 13.0.0/g' pubspec.yaml
+          sed -i -e 's/flutter_rust_bridge: 1.80.1/flutter_rust_bridge: 1.80.1/g' pubspec.yaml
+          flutter pub get
+          popd
 
       - name: Run flutter rust bridge
         run: |
-          ~/.cargo/bin/flutter_rust_bridge_codegen --rust-input ./src/flutter_ffi.rs --dart-output ./flutter/lib/generated_bridge.dart --c-output ./flutter/macos/Runner/bridge_generated.h
+          # Generate all bridge files in one command
+          ~/.cargo/bin/flutter_rust_bridge_codegen \
+            --rust-input ./src/flutter_ffi.rs \
+            --dart-output ./flutter/lib/generated_bridge.dart \
+            --rust-output ./src/bridge_generated.rs \
+            --c-output ./flutter/macos/Runner/bridge_generated.h
+          
+          # Copy header file to iOS location
           cp ./flutter/macos/Runner/bridge_generated.h ./flutter/ios/Runner/bridge_generated.h
-          # Generate the Rust bridge files
-          ~/.cargo/bin/flutter_rust_bridge_codegen --rust-input ./src/flutter_ffi.rs --rust-output ./src/bridge_generated.rs
-          ~/.cargo/bin/flutter_rust_bridge_codegen --rust-input ./src/flutter_ffi.rs --rust-output ./src/bridge_generated.io.rs
+          
+          # Generate the .io.rs file separately if needed
+          ~/.cargo/bin/flutter_rust_bridge_codegen \
+            --rust-input ./src/flutter_ffi.rs \
+            --rust-output ./src/bridge_generated.io.rs
+          
+          # Debug: Check if files were generated
+          echo "Checking generated files..."
+          ls -la ./src/bridge_generated.rs
+          ls -la ./src/bridge_generated.io.rs
+          ls -la ./flutter/lib/generated_bridge.dart
+          ls -la ./flutter/macos/Runner/bridge_generated.h
 
       - name: Upload Artifact
         uses: actions/upload-artifact@master
