@@ -174,17 +174,24 @@ jobs:
           
           # Apply patch with proper error handling
           Push-Location $flutterDir
-          $patchResult = git apply flutter_3.24.4_dropdown_menu_enableFilter.diff 2>&1
-          $patchExitCode = $LASTEXITCODE
-          
-          if ($patchExitCode -eq 0) {
-            Write-Host "Flutter patch applied successfully"
-          } else {
-            Write-Host "Warning: Flutter patch failed (exit code: $patchExitCode)"
-            Write-Host "Patch output: $patchResult"
+          try {
+            $patchResult = git apply flutter_3.24.4_dropdown_menu_enableFilter.diff 2>&1
+            $patchExitCode = $LASTEXITCODE
+            
+            if ($patchExitCode -eq 0) {
+              Write-Host "Flutter patch applied successfully"
+            } else {
+              Write-Host "Warning: Flutter patch failed (exit code: $patchExitCode)"
+              Write-Host "Patch output: $patchResult"
+              Write-Host "Continuing without patch - this is expected for Flutter $flutterVersion"
+            }
+          } catch {
+            Write-Host "Warning: Flutter patch failed with exception"
+            Write-Host "Exception: $($_.Exception.Message)"
             Write-Host "Continuing without patch - this is expected for Flutter $flutterVersion"
+          } finally {
+            Pop-Location
           }
-          Pop-Location
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@v1
