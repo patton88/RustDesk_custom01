@@ -144,15 +144,6 @@ jobs:
           Expand-Archive -Path windows-x64-release.zip -DestinationPath windows-x64-release
           Move-Item -Path "windows-x64-release\*" -Destination "C:\hostedtoolcache\windows\flutter\stable-${{ env.FLUTTER_VERSION }}-x64\bin\cache\artifacts\engine\windows-x64-release\" -Force
 
-      - name: Check Flutter project status
-        run: |
-          Write-Host "Checking Flutter project status..."
-          cd flutter
-          flutter doctor -v
-          flutter pub get
-          flutter pub deps
-          Write-Host "Flutter project check completed"
-
       - name: Patch flutter
         shell: bash
         run: |
