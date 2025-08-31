@@ -9,8 +9,7 @@ on:
 
 env:
   RUST_VERSION: "1.75"
-  BRIDGE_RUST_VERSION: "1.82"
-  FLUTTER_VERSION: "3.24.5"
+  FLUTTER_VERSION: "3.22.3"
   LLVM_VERSION: "15.0.6"
   VCPKG_COMMIT_ID: "6f29f12e82a8293156836ad81cc9bf5af41fe836"
   VERSION: "1.4.1-custom"
@@ -18,56 +17,63 @@ env:
 
 jobs:
   generate-bridge:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
         with:
           submodules: recursive
-          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Initialize submodules
+      - name: Install prerequisites
         run: |
-          git submodule update --init --recursive
-          ls -la libs/hbb_common/
+          sudo apt-get install ca-certificates -y
+          sudo apt-get update -y
+          sudo apt-get install -y \
+            clang \
+            cmake \
+            curl \
+            gcc \
+            git \
+            g++ \
+            libclang-dev \
+            libgtk-3-dev \
+            llvm-dev \
+            nasm \
+            ninja-build \
+            pkg-config \
+            wget
 
-      - name: Install Flutter
-        uses: subosito/flutter-action@v2.12.0
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@v1
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+          targets: x86_64-unknown-linux-gnu
+          components: "rustfmt"
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          prefix-key: bridge-ubuntu-22.04
+
+      - name: Install flutter
+        uses: subosito/flutter-action@v2
         with:
           channel: "stable"
           flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
 
-      - name: Install Rust for bridge generation
-        uses: dtolnay/rust-toolchain@v1
-        with:
-          toolchain: ${{ env.BRIDGE_RUST_VERSION }}
-          components: "rustfmt"
-
-      - name: Generate bridge files
+      - name: Install flutter rust bridge deps
+        shell: bash
         run: |
-          cd flutter
-          flutter pub get
-          # Install flutter_rust_bridge_codegen
-          cargo install flutter_rust_bridge_codegen --version 1.80.1 --features uuid
-          # Generate bridge files (same as original bridge.yml)
-          ~/.cargo/bin/flutter_rust_bridge_codegen --rust-input ../src/flutter_ffi.rs --dart-output ./lib/generated_bridge.dart --c-output ./macos/Runner/bridge_generated.h
-          # Copy header files
-          cp ./macos/Runner/bridge_generated.h ./ios/Runner/bridge_generated.h
-          # Create generated directory if it doesn't exist
-          mkdir -p lib/generated
-          # Copy generated files to generated directory
-          if [ -f lib/generated_bridge.dart ]; then
-            cp lib/generated_bridge.dart lib/generated/
-            echo "Bridge file generated successfully"
-          else
-            echo "Failed to generate bridge file"
-            exit 1
-          fi
-          if [ -d lib/generated ]; then
-            ls -la lib/generated/
-          fi
+          cargo install cargo-expand --version 1.0.95 --locked
+          cargo install flutter_rust_bridge_codegen --version 1.80.1 --features "uuid" --locked
+          pushd flutter && sed -i -e 's/extended_text: 14.0.0/extended_text: 13.0.0/g' pubspec.yaml && flutter pub get && popd
 
-      - name: Upload bridge files
+      - name: Run flutter rust bridge
+        run: |
+          ~/.cargo/bin/flutter_rust_bridge_codegen --rust-input ./src/flutter_ffi.rs --dart-output ./flutter/lib/generated_bridge.dart --c-output ./flutter/macos/Runner/bridge_generated.h
+          cp ./flutter/macos/Runner/bridge_generated.h ./flutter/ios/Runner/bridge_generated.h
+
+      - name: Upload Artifact
         uses: actions/upload-artifact@master
         with:
           name: bridge-artifact
@@ -84,16 +90,17 @@ jobs:
     needs: [generate-bridge]
     runs-on: windows-2022
     steps:
+      - name: Export GitHub Actions cache environment variables
+        uses: actions/github-script@v6
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
       - name: Checkout source code
         uses: actions/checkout@v4
         with:
           submodules: recursive
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Initialize submodules
-        run: |
-          git submodule update --init --recursive
-          Get-ChildItem -Path "libs\hbb_common"
 
       - name: Restore bridge files
         uses: actions/download-artifact@master
@@ -101,40 +108,16 @@ jobs:
           name: bridge-artifact
           path: ./
 
-      - name: Copy bridge files to correct locations
-        run: |
-          # Copy Rust bridge files
-          if (Test-Path src\bridge_generated.rs) {
-            Write-Host "Rust bridge files restored successfully"
-          } else {
-            Write-Host "No Rust bridge files found"
-            exit 1
-          }
-          
-          # Copy Dart bridge files
-          if (Test-Path flutter\lib\generated_bridge.dart) {
-            Write-Host "Dart bridge files restored successfully"
-          } else {
-            Write-Host "No Dart bridge files found"
-            exit 1
-          }
-
       - name: Install LLVM and Clang
         uses: KyleMayes/install-llvm-action@v1
         with:
           version: ${{ env.LLVM_VERSION }}
 
       - name: Install Flutter
-        uses: subosito/flutter-action@v2.12.0
+        uses: subosito/flutter-action@v2
         with:
           channel: "stable"
           flutter-version: ${{ env.FLUTTER_VERSION }}
-
-      - name: Verify Flutter installation
-        run: |
-          Write-Host "Verifying Flutter installation..."
-          flutter --version
-          Write-Host "Flutter installation verified successfully"
 
       - name: Replace engine with rustdesk custom flutter engine
         run: |
@@ -143,13 +126,6 @@ jobs:
           Invoke-WebRequest -Uri https://github.com/rustdesk/engine/releases/download/main/windows-x64-release.zip -OutFile windows-x64-release.zip
           Expand-Archive -Path windows-x64-release.zip -DestinationPath windows-x64-release
           Move-Item -Path "windows-x64-release\*" -Destination "C:\hostedtoolcache\windows\flutter\stable-${{ env.FLUTTER_VERSION }}-x64\bin\cache\artifacts\engine\windows-x64-release\" -Force
-
-      - name: Patch flutter
-        shell: bash
-        run: |
-          cp .github/patches/flutter_3.24.4_dropdown_menu_enableFilter.diff $(dirname $(dirname $(which flutter)))
-          cd $(dirname $(dirname $(which flutter)))
-          [[ "3.24.5" == ${{env.FLUTTER_VERSION}} ]] && git apply flutter_3.24.4_dropdown_menu_enableFilter.diff
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@v1
