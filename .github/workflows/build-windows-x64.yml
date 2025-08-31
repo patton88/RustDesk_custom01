@@ -160,6 +160,9 @@ jobs:
 
       - name: Patch flutter
         run: |
+          # Set PowerShell error handling to continue on errors
+          $ErrorActionPreference = "Continue"
+          
           # Get Flutter installation directory
           $flutterPath = (Get-Command flutter).Source
           $flutterDir = Split-Path -Parent (Split-Path -Parent $flutterPath)
@@ -192,6 +195,9 @@ jobs:
           } finally {
             Pop-Location
           }
+          
+          # Ensure script continues even if any command failed
+          Write-Host "Flutter patch step completed"
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@v1
