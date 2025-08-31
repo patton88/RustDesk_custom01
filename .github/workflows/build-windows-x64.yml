@@ -149,14 +149,50 @@ jobs:
           (Get-Content pubspec.yaml) -replace 'extended_text: 14\.0\.0', 'extended_text: 13.0.0' | Set-Content pubspec.yaml
           flutter pub get
           popd
+          
+          # Clean Flutter build cache
+          Write-Host "Cleaning Flutter build cache..."
+          flutter clean
+          flutter pub get
 
       - name: Replace engine with rustdesk custom flutter engine
         run: |
           flutter doctor -v
           flutter precache --windows
+          
+          # Debug: Check Flutter installation path
+          $flutterPath = (Get-Command flutter).Source
+          $flutterDir = Split-Path -Parent (Split-Path -Parent $flutterPath)
+          Write-Host "Flutter directory: $flutterDir"
+          
+          # Check if engine directory exists
+          $engineDir = "C:\hostedtoolcache\windows\flutter\stable-${{ env.FLUTTER_VERSION }}-x64\bin\cache\artifacts\engine\windows-x64-release"
+          Write-Host "Target engine directory: $engineDir"
+          
+          if (Test-Path $engineDir) {
+            Write-Host "Engine directory exists"
+            Get-ChildItem $engineDir | Select-Object Name
+          } else {
+            Write-Host "Engine directory does not exist, creating it"
+            New-Item -ItemType Directory -Path $engineDir -Force
+          }
+          
+          # Download and extract engine
+          Write-Host "Downloading RustDesk custom Flutter engine..."
           Invoke-WebRequest -Uri https://github.com/rustdesk/engine/releases/download/main/windows-x64-release.zip -OutFile windows-x64-release.zip
-          Expand-Archive -Path windows-x64-release.zip -DestinationPath windows-x64-release
-          Move-Item -Path "windows-x64-release\*" -Destination "C:\hostedtoolcache\windows\flutter\stable-${{ env.FLUTTER_VERSION }}-x64\bin\cache\artifacts\engine\windows-x64-release\" -Force
+          
+          Write-Host "Extracting engine files..."
+          Expand-Archive -Path windows-x64-release.zip -DestinationPath windows-x64-release -Force
+          
+          Write-Host "Moving engine files..."
+          Move-Item -Path "windows-x64-release\*" -Destination $engineDir -Force
+          
+          Write-Host "Engine replacement completed. Contents:"
+          Get-ChildItem $engineDir | Select-Object Name
+          
+          # Clean up
+          Remove-Item -Path "windows-x64-release.zip" -Force -ErrorAction SilentlyContinue
+          Remove-Item -Path "windows-x64-release" -Recurse -Force -ErrorAction SilentlyContinue
 
       - name: Patch flutter
         run: |
