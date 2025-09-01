@@ -91,7 +91,13 @@ pub fn core_main() -> Option<Vec<String>> {
                 "--port-forward",
                 "--rdp",
             ]
-            .contains(&arg.as_str())
+            .contains(&arg.as_str()) || 
+            arg.starts_with("--connect=") ||
+            arg.starts_with("--play=") ||
+            arg.starts_with("--file-transfer=") ||
+            arg.starts_with("--view-camera=") ||
+            arg.starts_with("--port-forward=") ||
+            arg.starts_with("--rdp=")
             {
                 _is_flutter_invoke_new_connection = true;
             }
@@ -170,7 +176,16 @@ pub fn core_main() -> Option<Vec<String>> {
     }
     #[cfg(feature = "flutter")]
     if _is_flutter_invoke_new_connection {
-        return core_main_invoke_new_connection(std::env::args());
+        // Try to send connection to existing window, but don't exit if it fails
+        let result = core_main_invoke_new_connection(std::env::args());
+        if result.is_none() {
+            // Successfully sent to existing window, exit
+            log::info!("Successfully sent connection to existing window, exiting");
+            return None;
+        }
+        // Failed to send to existing window, continue with Flutter GUI
+        log::info!("No existing Flutter window found, will start new GUI with connection args");
+        // Don't return here - continue to start Flutter GUI
     }
     let click_setup = cfg!(windows) && args.is_empty() && crate::common::is_setup(&arg_exe);
     if click_setup && !config::is_disable_installation() {
@@ -672,12 +687,7 @@ pub fn core_main() -> Option<Vec<String>> {
         }
         
         // If we have specific connection arguments, handle them directly
-        if args.contains(&"--connect".to_string()) || 
-           args.contains(&"--play".to_string()) || 
-           args.contains(&"--file-transfer".to_string()) || 
-           args.contains(&"--view-camera".to_string()) || 
-           args.contains(&"--port-forward".to_string()) || 
-           args.contains(&"--rdp".to_string()) {
+        if _is_flutter_invoke_new_connection {
             // These arguments should be handled by the existing logic
             // But we still want to start Flutter GUI to handle the UI
             // Don't return None here - let Flutter handle the connection
@@ -777,10 +787,21 @@ fn core_main_invoke_new_connection(mut args: std::env::Args) -> Option<Vec<Strin
                 authority = Some((&arg.to_string()[2..]).to_owned());
                 id = args.next();
             }
+            arg if arg.starts_with("--connect=") => {
+                // Handle --connect=value format
+                let value = arg.strip_prefix("--connect=").unwrap_or("");
+                authority = Some("connect".to_string());
+                id = Some(value.to_string());
+            }
             "--password" => {
                 if let Some(password) = args.next() {
                     param_array.push(format!("password={password}"));
                 }
+            }
+            arg if arg.starts_with("--password=") => {
+                // Handle --password=value format
+                let value = arg.strip_prefix("--password=").unwrap_or("");
+                param_array.push(format!("password={value}"));
             }
             "--relay" => {
                 param_array.push(format!("relay=true"));

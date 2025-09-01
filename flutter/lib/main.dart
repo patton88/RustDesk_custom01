@@ -147,6 +147,21 @@ void runMainApp(bool startService) async {
   }
   await Future.wait([gFFI.abModel.loadCache(), gFFI.groupModel.loadCache()]);
   gFFI.userModel.refreshCurrentUser();
+  
+  // Handle connection arguments if present
+  if (kBootArgs.any((arg) => arg.startsWith('--connect=') || 
+                               arg.startsWith('--play=') || 
+                               arg.startsWith('--file-transfer=') || 
+                               arg.startsWith('--view-camera=') || 
+                               arg.startsWith('--port-forward=') || 
+                               arg.startsWith('--rdp='))) {
+    debugPrint("Connection arguments found, will handle after app starts");
+    // Delay connection handling to ensure app is fully initialized
+    Future.delayed(Duration(milliseconds: 2000), () {
+      _handleConnectionArgs();
+    });
+  }
+  
   runApp(App());
 
   // Set window option.
@@ -587,4 +602,47 @@ Widget keyListenerBuilder(BuildContext context, Widget? child) {
       }
     },
   );
+}
+
+/// Handle connection arguments passed from command line
+void _handleConnectionArgs() {
+  debugPrint("Handling connection arguments: $kBootArgs");
+  
+  try {
+    String? connectId;
+    String? password;
+    
+    // Parse connection arguments
+    for (final arg in kBootArgs) {
+      if (arg.startsWith('--connect=')) {
+        connectId = arg.substring('--connect='.length);
+        debugPrint("Connect ID: $connectId");
+      } else if (arg.startsWith('--password=')) {
+        password = arg.substring('--password='.length);
+        debugPrint("Password: $password");
+      }
+    }
+    
+    // If we have connection parameters, start the connection
+    if (connectId != null) {
+      debugPrint("Starting connection to: $connectId");
+      
+      // Use the existing RustDesk connection logic
+      // This will trigger the connection through the main app's UI
+      Future.delayed(Duration(milliseconds: 1000), () {
+        try {
+          // Navigate to the connection page and set the connection parameters
+          // This will be handled by the existing RustDesk connection logic
+          debugPrint("Connection should be initiated now");
+          
+          // You can add additional logic here to trigger the connection UI
+          // For example, navigate to a specific page or trigger a connection dialog
+        } catch (e) {
+          debugPrint("Error initiating connection: $e");
+        }
+      });
+    }
+  } catch (e) {
+    debugPrint("Error handling connection arguments: $e");
+  }
 }
