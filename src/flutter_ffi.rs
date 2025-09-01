@@ -1630,6 +1630,9 @@ pub fn main_init_with_args(app_dir: String, custom_client_config: String, args: 
         }
     }
     
+    // Log the arguments for debugging
+    log::info!("main_init_with_args called with args: {:?}", args);
+    
     initialize(&app_dir, &custom_client_config);
 }
 

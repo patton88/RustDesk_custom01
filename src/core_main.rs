@@ -90,14 +90,20 @@ pub fn core_main() -> Option<Vec<String>> {
                 "--view-camera",
                 "--port-forward",
                 "--rdp",
+                "--terminal",
+                "--terminal-admin",
+                "--password",
             ]
             .contains(&arg.as_str()) || 
             arg.starts_with("--connect=") ||
+            arg.starts_with("--password=") ||
             arg.starts_with("--play=") ||
             arg.starts_with("--file-transfer=") ||
             arg.starts_with("--view-camera=") ||
             arg.starts_with("--port-forward=") ||
-            arg.starts_with("--rdp=")
+            arg.starts_with("--rdp=") ||
+            arg.starts_with("--terminal=") ||
+            arg.starts_with("--terminal-admin=")
             {
                 _is_flutter_invoke_new_connection = true;
             }
@@ -171,7 +177,7 @@ pub fn core_main() -> Option<Vec<String>> {
         }
     }
     #[cfg(windows)]
-    if args.contains(&"--connect".to_string()) || args.contains(&"--view-camera".to_string()) {
+    if _is_flutter_invoke_new_connection {
         hbb_common::platform::windows::start_cpu_performance_monitor();
     }
     #[cfg(feature = "flutter")]
@@ -694,14 +700,18 @@ pub fn core_main() -> Option<Vec<String>> {
             log::info!("Connection arguments detected, will start Flutter GUI");
             
             // Add connection arguments to Flutter args so they can be processed
-            for arg in &args {
-                if arg.starts_with("--connect=") || 
+            // 从原始参数源中获取连接参数，而不是从args中获取
+            // 避免重复添加连接参数
+            for arg in &args_source {
+                if (arg.starts_with("--connect=") || 
                    arg.starts_with("--password=") ||
                    arg.starts_with("--play=") ||
                    arg.starts_with("--file-transfer=") ||
                    arg.starts_with("--view-camera=") ||
                    arg.starts_with("--port-forward=") ||
-                   arg.starts_with("--rdp=") {
+                   arg.starts_with("--rdp=") ||
+                   arg.starts_with("--terminal=") ||
+                   arg.starts_with("--terminal-admin=")) && !flutter_args.contains(arg) {
                     flutter_args.push(arg.clone());
                 }
             }
@@ -783,7 +793,7 @@ fn core_main_invoke_new_connection(mut args: std::env::Args) -> Option<Vec<Strin
     while let Some(arg) = args.next() {
         match arg.as_str() {
             "--connect" | "--play" | "--file-transfer" | "--view-camera" | "--port-forward"
-            | "--rdp" => {
+            | "--rdp" | "--terminal" | "--terminal-admin" => {
                 authority = Some((&arg.to_string()[2..]).to_owned());
                 id = args.next();
             }
@@ -791,6 +801,48 @@ fn core_main_invoke_new_connection(mut args: std::env::Args) -> Option<Vec<Strin
                 // Handle --connect=value format
                 let value = arg.strip_prefix("--connect=").unwrap_or("");
                 authority = Some("connect".to_string());
+                id = Some(value.to_string());
+            }
+            arg if arg.starts_with("--play=") => {
+                // Handle --play=value format
+                let value = arg.strip_prefix("--play=").unwrap_or("");
+                authority = Some("play".to_string());
+                id = Some(value.to_string());
+            }
+            arg if arg.starts_with("--file-transfer=") => {
+                // Handle --file-transfer=value format
+                let value = arg.strip_prefix("--file-transfer=").unwrap_or("");
+                authority = Some("file-transfer".to_string());
+                id = Some(value.to_string());
+            }
+            arg if arg.starts_with("--view-camera=") => {
+                // Handle --view-camera=value format
+                let value = arg.strip_prefix("--view-camera=").unwrap_or("");
+                authority = Some("view-camera".to_string());
+                id = Some(value.to_string());
+            }
+            arg if arg.starts_with("--port-forward=") => {
+                // Handle --port-forward=value format
+                let value = arg.strip_prefix("--port-forward=").unwrap_or("");
+                authority = Some("port-forward".to_string());
+                id = Some(value.to_string());
+            }
+            arg if arg.starts_with("--rdp=") => {
+                // Handle --rdp=value format
+                let value = arg.strip_prefix("--rdp=").unwrap_or("");
+                authority = Some("rdp".to_string());
+                id = Some(value.to_string());
+            }
+            arg if arg.starts_with("--terminal=") => {
+                // Handle --terminal=value format
+                let value = arg.strip_prefix("--terminal=").unwrap_or("");
+                authority = Some("terminal".to_string());
+                id = Some(value.to_string());
+            }
+            arg if arg.starts_with("--terminal-admin=") => {
+                // Handle --terminal-admin=value format
+                let value = arg.strip_prefix("--terminal-admin=").unwrap_or("");
+                authority = Some("terminal-admin".to_string());
                 id = Some(value.to_string());
             }
             "--password" => {

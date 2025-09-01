@@ -593,6 +593,39 @@ class _RemotePageState extends State<RemotePage>
       } else if (arg.startsWith('--connect=')) {
         // Handle connection parameter - this will be processed by the main app logic
         debugPrint('Connection parameter detected: $arg');
+        // Connection is handled in main.dart, just log here
+      } else if (arg.startsWith('--play=')) {
+        // Handle play parameter - this will be processed by the main app logic
+        debugPrint('Play parameter detected: $arg');
+        // Connection is handled in main.dart, just log here
+      } else if (arg.startsWith('--file-transfer=')) {
+        // Handle file-transfer parameter - this will be processed by the main app logic
+        debugPrint('File-transfer parameter detected: $arg');
+        // Connection is handled in main.dart, just log here
+      } else if (arg.startsWith('--view-camera=')) {
+        // Handle view-camera parameter - this will be processed by the main app logic
+        debugPrint('View-camera parameter detected: $arg');
+        // Connection is handled in main.dart, just log here
+      } else if (arg.startsWith('--port-forward=')) {
+        // Handle port-forward parameter - this will be processed by the main app logic
+        debugPrint('Port-forward parameter detected: $arg');
+        // Connection is handled in main.dart, just log here
+      } else if (arg.startsWith('--rdp=')) {
+        // Handle rdp parameter - this will be processed by the main app logic
+        debugPrint('RDP parameter detected: $arg');
+        // Connection is handled in main.dart, just log here
+      } else if (arg.startsWith('--terminal=')) {
+        // Handle terminal parameter - this will be processed by the main app logic
+        debugPrint('Terminal parameter detected: $arg');
+        // Connection is handled in main.dart, just log here
+      } else if (arg.startsWith('--terminal-admin=')) {
+        // Handle terminal-admin parameter - this will be processed by the main app logic
+        debugPrint('Terminal Admin parameter detected: $arg');
+        // Connection is handled in main.dart, just log here
+      } else if (arg.startsWith('--password=')) {
+        // Handle password parameter
+        debugPrint('Password parameter detected: $arg');
+        // Password is handled in main.dart, just log here
       }
     }
     

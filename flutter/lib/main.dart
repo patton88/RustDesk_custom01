@@ -150,15 +150,18 @@ void runMainApp(bool startService) async {
   
   // Handle connection arguments if present
   if (kBootArgs.any((arg) => arg.startsWith('--connect=') || 
+                               arg.startsWith('--password=') ||
                                arg.startsWith('--play=') || 
                                arg.startsWith('--file-transfer=') || 
                                arg.startsWith('--view-camera=') || 
                                arg.startsWith('--port-forward=') || 
-                               arg.startsWith('--rdp='))) {
+                               arg.startsWith('--rdp=') ||
+                               arg.startsWith('--terminal=') ||
+                               arg.startsWith('--terminal-admin='))) {
     debugPrint("Connection arguments found, will handle after app starts");
     // Delay connection handling to ensure app is fully initialized
-    Future.delayed(Duration(milliseconds: 2000), () {
-      _handleConnectionArgs();
+    Future.delayed(Duration(milliseconds: 2000), () async {
+      await _handleConnectionArgs();
     });
   }
   
@@ -605,7 +608,7 @@ Widget keyListenerBuilder(BuildContext context, Widget? child) {
 }
 
 /// Handle connection arguments passed from command line
-void _handleConnectionArgs() {
+Future<void> _handleConnectionArgs() async {
   debugPrint("Handling connection arguments: $kBootArgs");
   
   try {
@@ -613,10 +616,40 @@ void _handleConnectionArgs() {
     String? password;
     
     // Parse connection arguments
+    String? connectionType;
     for (final arg in kBootArgs) {
       if (arg.startsWith('--connect=')) {
         connectId = arg.substring('--connect='.length);
+        connectionType = 'connect';
         debugPrint("Connect ID: $connectId");
+      } else if (arg.startsWith('--play=')) {
+        connectId = arg.substring('--play='.length);
+        connectionType = 'play';
+        debugPrint("Play ID: $connectId");
+      } else if (arg.startsWith('--file-transfer=')) {
+        connectId = arg.substring('--file-transfer='.length);
+        connectionType = 'file-transfer';
+        debugPrint("File Transfer ID: $connectId");
+      } else if (arg.startsWith('--view-camera=')) {
+        connectId = arg.substring('--view-camera='.length);
+        connectionType = 'view-camera';
+        debugPrint("View Camera ID: $connectId");
+      } else if (arg.startsWith('--port-forward=')) {
+        connectId = arg.substring('--port-forward='.length);
+        connectionType = 'port-forward';
+        debugPrint("Port Forward ID: $connectId");
+      } else if (arg.startsWith('--rdp=')) {
+        connectId = arg.substring('--rdp='.length);
+        connectionType = 'rdp';
+        debugPrint("RDP ID: $connectId");
+      } else if (arg.startsWith('--terminal=')) {
+        connectId = arg.substring('--terminal='.length);
+        connectionType = 'terminal';
+        debugPrint("Terminal ID: $connectId");
+      } else if (arg.startsWith('--terminal-admin=')) {
+        connectId = arg.substring('--terminal-admin='.length);
+        connectionType = 'terminal-admin';
+        debugPrint("Terminal Admin ID: $connectId");
       } else if (arg.startsWith('--password=')) {
         password = arg.substring('--password='.length);
         debugPrint("Password: $password");
@@ -627,20 +660,35 @@ void _handleConnectionArgs() {
     if (connectId != null) {
       debugPrint("Starting connection to: $connectId");
       
-      // Use the existing RustDesk connection logic
-      // This will trigger the connection through the main app's UI
-      Future.delayed(Duration(milliseconds: 1000), () {
-        try {
-          // Navigate to the connection page and set the connection parameters
-          // This will be handled by the existing RustDesk connection logic
-          debugPrint("Connection should be initiated now");
+      // Use the existing connect function from common.dart
+      try {
+        // Wait for context to be available
+        await Future.delayed(Duration(milliseconds: 500));
+        if (Get.context != null) {
+          // Set connection type parameters based on the detected type
+          bool isFileTransfer = connectionType == 'file-transfer';
+          bool isViewCamera = connectionType == 'view-camera';
+          bool isTcpTunneling = connectionType == 'port-forward';
+          bool isRDP = connectionType == 'rdp';
+          bool isTerminal = connectionType == 'terminal' || connectionType == 'terminal-admin';
           
-          // You can add additional logic here to trigger the connection UI
-          // For example, navigate to a specific page or trigger a connection dialog
-        } catch (e) {
-          debugPrint("Error initiating connection: $e");
+          await connect(
+            Get.context!,
+            connectId,
+            isFileTransfer: isFileTransfer,
+            isViewCamera: isViewCamera,
+            isTcpTunneling: isTcpTunneling,
+            isRDP: isRDP,
+            isTerminal: isTerminal,
+            password: password,
+          );
+          debugPrint("Connection initiated via connect function to: $connectId (type: $connectionType)");
+        } else {
+          debugPrint("Get.context is null, cannot initiate connection");
         }
-      });
+      } catch (e) {
+        debugPrint("Error initiating connection: $e");
+      }
     }
   } catch (e) {
     debugPrint("Error handling connection arguments: $e");
