@@ -233,7 +233,7 @@ jobs:
         run: |
           # Windows: build RustDesk
           Write-Host "Starting RustDesk build..."
-          python3 .\build.py --portable --hwcodec --flutter --vram --skip-portable-pack
+          python3 .\build.py --portable --flutter --skip-portable-pack
           
           # Check if flutter build directory exists
           Write-Host "Checking flutter build directory..."
