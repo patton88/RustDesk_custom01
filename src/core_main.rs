@@ -679,8 +679,22 @@ pub fn core_main() -> Option<Vec<String>> {
            args.contains(&"--port-forward".to_string()) || 
            args.contains(&"--rdp".to_string()) {
             // These arguments should be handled by the existing logic
-            // Don't start Flutter GUI, let the connection logic handle it
-            return None;
+            // But we still want to start Flutter GUI to handle the UI
+            // Don't return None here - let Flutter handle the connection
+            log::info!("Connection arguments detected, will start Flutter GUI");
+            
+            // Add connection arguments to Flutter args so they can be processed
+            for arg in &args {
+                if arg.starts_with("--connect=") || 
+                   arg.starts_with("--password=") ||
+                   arg.starts_with("--play=") ||
+                   arg.starts_with("--file-transfer=") ||
+                   arg.starts_with("--view-camera=") ||
+                   arg.starts_with("--port-forward=") ||
+                   arg.starts_with("--rdp=") {
+                    flutter_args.push(arg.clone());
+                }
+            }
         }
         
         return Some(flutter_args);

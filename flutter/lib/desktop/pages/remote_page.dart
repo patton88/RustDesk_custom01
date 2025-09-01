@@ -149,8 +149,10 @@ class _RemotePageState extends State<RemotePage>
       _zoomCursor.value = bind.sessionGetToggleOptionSync(
           sessionId: sessionId, arg: kOptionZoomCursor);
 
-      // Handle command line arguments
-      _handleCommandLineArgs();
+      // Handle command line arguments after a delay to ensure app is fully initialized
+      Future.delayed(Duration(milliseconds: 1000), () {
+        _handleCommandLineArgs();
+      });
     });
     DesktopMultiWindow.addListener(this);
     // if (!_isCustomCursorInited) {
@@ -554,8 +556,11 @@ class _RemotePageState extends State<RemotePage>
     
     // Parse command line arguments passed from Rust
     for (final arg in kBootArgs) {
+      debugPrint('Processing arg: $arg');
+      
       if (arg.startsWith('--fullscreen=')) {
         final value = arg.substring('--fullscreen='.length);
+        debugPrint('Setting fullscreen: $value');
         if (value == 'true') {
           _setFullscreen(true);
         } else if (value == 'false') {
@@ -563,6 +568,7 @@ class _RemotePageState extends State<RemotePage>
         }
       } else if (arg.startsWith('--collapse_toolbar=')) {
         final value = arg.substring('--collapse_toolbar='.length);
+        debugPrint('Setting collapse_toolbar: $value');
         if (value == 'true') {
           widget.toolbarState.show.value = false;
         } else if (value == 'false') {
@@ -570,6 +576,7 @@ class _RemotePageState extends State<RemotePage>
         }
       } else if (arg.startsWith('--desktop_scaling=')) {
         final value = arg.substring('--desktop_scaling='.length);
+        debugPrint('Setting desktop_scaling: $value');
         if (value == 'true') {
           // Only set scaling if sessionId is available
           if (sessionId != null) {
@@ -583,6 +590,9 @@ class _RemotePageState extends State<RemotePage>
             _ffi.canvasModel.updateViewStyle();
           }
         }
+      } else if (arg.startsWith('--connect=')) {
+        // Handle connection parameter - this will be processed by the main app logic
+        debugPrint('Connection parameter detected: $arg');
       }
     }
     
