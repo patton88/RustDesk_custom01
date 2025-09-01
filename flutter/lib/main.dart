@@ -42,6 +42,8 @@ Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
 
   debugPrint("launch args: $args");
+  debugPrint("launch args length: ${args.length}");
+  debugPrint("launch args first: ${args.isNotEmpty ? args.first : 'empty'}");
   kBootArgs = List.from(args);
 
   if (!isDesktop) {

@@ -547,6 +547,11 @@ class _RemotePageState extends State<RemotePage>
   bool get wantKeepAlive => true;
 
   void _handleCommandLineArgs() {
+    // Debug output
+    debugPrint('_handleCommandLineArgs called');
+    debugPrint('kBootArgs: $kBootArgs');
+    debugPrint('kBootArgs length: ${kBootArgs.length}');
+    
     // Parse command line arguments passed from Rust
     for (final arg in kBootArgs) {
       if (arg.startsWith('--fullscreen=')) {
