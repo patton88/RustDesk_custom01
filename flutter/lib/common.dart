@@ -2164,6 +2164,26 @@ bool handleUriLink({List<String>? cmdArgs, Uri? uri, String? uriString}) {
   String? password;
   String? switchUuid;
   bool? forceRelay;
+  
+  // Check for custom arguments first
+  bool hasCustomArgs = false;
+  for (int i = 0; i < args.length; i++) {
+    if (args[i].startsWith('--fullscreen=') || 
+        args[i].startsWith('--collapse_toolbar=') || 
+        args[i].startsWith('--desktop_scaling=')) {
+      hasCustomArgs = true;
+      break;
+    }
+  }
+  
+  // If we only have custom arguments (no connection arguments), don't handle as URI link
+  if (hasCustomArgs && !args.any((arg) => 
+      arg == '--connect' || arg == '--play' || arg == '--file-transfer' || 
+      arg == '--view-camera' || arg == '--port-forward' || arg == '--rdp' || 
+      arg == '--terminal' || arg == '--terminal-admin')) {
+    return false; // Let the main app handle custom arguments
+  }
+  
   for (int i = 0; i < args.length; i++) {
     switch (args[i]) {
       case '--connect':

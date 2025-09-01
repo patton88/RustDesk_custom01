@@ -50,51 +50,37 @@ pub fn core_main() -> Option<Vec<String>> {
     let mut collapse_toolbar: Option<bool> = None;
     let mut desktop_scaling: Option<bool> = None;
 
-    // Check if we have arguments from Flutter or command line
-    let args_source = if let Ok(flutter_args) = std::env::var("RUSTDESK_ARGS") {
-        // Parse arguments from Flutter
-        let mut flutter_args_vec = vec![arg_exe.clone()];
-        flutter_args_vec.extend(flutter_args.split_whitespace().map(|s| s.to_string()));
-        flutter_args_vec
-    } else {
-        // Use regular command line arguments
-        std::env::args().collect()
-    };
+    // Get command line arguments
+    let args_source = std::env::args().collect::<Vec<String>>();
     
-    // Also check for specific argument environment variables
-    if fullscreen_mode.is_none() {
-        if let Ok(value) = std::env::var("RUSTDESK_FULLSCREEN") {
-            fullscreen_mode = match value.as_str() {
-                "true" => Some(true),
-                "false" => Some(false),
-                _ => None,
-            };
-        }
+    // Check for specific argument environment variables first (set by Flutter)
+    if let Ok(value) = std::env::var("RUSTDESK_FULLSCREEN") {
+        fullscreen_mode = match value.as_str() {
+            "true" => Some(true),
+            "false" => Some(false),
+            _ => None,
+        };
     }
     
-    if collapse_toolbar.is_none() {
-        if let Ok(value) = std::env::var("RUSTDESK_COLLAPSE_TOOLBAR") {
-            collapse_toolbar = match value.as_str() {
-                "true" => Some(true),
-                "false" => Some(false),
-                _ => None,
-            };
-        }
+    if let Ok(value) = std::env::var("RUSTDESK_COLLAPSE_TOOLBAR") {
+        collapse_toolbar = match value.as_str() {
+            "true" => Some(true),
+            "false" => Some(false),
+            _ => None,
+        };
     }
     
-    if desktop_scaling.is_none() {
-        if let Ok(value) = std::env::var("RUSTDESK_DESKTOP_SCALING") {
-            desktop_scaling = match value.as_str() {
-                "true" => Some(true),
-                "false" => Some(false),
-                _ => None,
-            };
-        }
+    if let Ok(value) = std::env::var("RUSTDESK_DESKTOP_SCALING") {
+        desktop_scaling = match value.as_str() {
+            "true" => Some(true),
+            "false" => Some(false),
+            _ => None,
+        };
     }
 
-    for arg in args_source {
+    for arg in args_source.iter() {
         if i == 0 {
-            arg_exe = arg;
+            arg_exe = arg.clone();
         } else if i > 0 {
             #[cfg(feature = "flutter")]
             if [
@@ -141,7 +127,7 @@ pub fn core_main() -> Option<Vec<String>> {
             } else if arg == "--no-server" {
                 no_server = true;
             } else {
-                args.push(arg);
+                args.push(arg.clone());
             }
         }
         i += 1;

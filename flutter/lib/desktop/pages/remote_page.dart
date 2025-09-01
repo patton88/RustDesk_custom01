@@ -566,13 +566,17 @@ class _RemotePageState extends State<RemotePage>
       } else if (arg.startsWith('--desktop_scaling=')) {
         final value = arg.substring('--desktop_scaling='.length);
         if (value == 'true') {
-          // Set to adaptive scaling
-          bind.sessionSetViewStyle(sessionId: sessionId, value: kRemoteViewStyleAdaptive);
-          _ffi.canvasModel.updateViewStyle();
+          // Only set scaling if sessionId is available
+          if (sessionId != null) {
+            bind.sessionSetViewStyle(sessionId: sessionId, value: kRemoteViewStyleAdaptive);
+            _ffi.canvasModel.updateViewStyle();
+          }
         } else if (value == 'false') {
-          // Set to original scaling
-          bind.sessionSetViewStyle(sessionId: sessionId, value: kRemoteViewStyleOriginal);
-          _ffi.canvasModel.updateViewStyle();
+          // Only set scaling if sessionId is available
+          if (sessionId != null) {
+            bind.sessionSetViewStyle(sessionId: sessionId, value: kRemoteViewStyleOriginal);
+            _ffi.canvasModel.updateViewStyle();
+          }
         }
       }
     }
@@ -600,15 +604,22 @@ class _RemotePageState extends State<RemotePage>
       final desktopScaling = Platform.environment['RUSTDESK_DESKTOP_SCALING'];
       if (desktopScaling != null) {
         if (desktopScaling == 'true') {
-          bind.sessionSetViewStyle(sessionId: sessionId, value: kRemoteViewStyleAdaptive);
-          _ffi.canvasModel.updateViewStyle();
+          // Only set scaling if sessionId is available
+          if (sessionId != null) {
+            bind.sessionSetViewStyle(sessionId: sessionId, value: kRemoteViewStyleAdaptive);
+            _ffi.canvasModel.updateViewStyle();
+          }
         } else if (desktopScaling == 'false') {
-          bind.sessionSetViewStyle(sessionId: sessionId, value: kRemoteViewStyleOriginal);
-          _ffi.canvasModel.updateViewStyle();
+          // Only set scaling if sessionId is available
+          if (sessionId != null) {
+            bind.sessionSetViewStyle(sessionId: sessionId, value: kRemoteViewStyleOriginal);
+            _ffi.canvasModel.updateViewStyle();
+          }
         }
       }
     } catch (e) {
       // Ignore environment variable errors
+      debugPrint('Error reading environment variables: $e');
     }
   }
 
