@@ -16,7 +16,7 @@ import 'package:flutter_hbb/models/state_model.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import '../../desktop/widgets/material_mod_popup_menu.dart' as mod_menu;
 import 'package:get/get.dart';
-import 'package:flex_color_picker/flex_color_picker.dart';
+// import 'package:flex_color_picker/flex_color_picker.dart';  // 临时注释掉
 
 import '../../common.dart';
 import 'dialog.dart';
@@ -821,22 +821,24 @@ class AddressBookTag extends StatelessWidget {
       getEntry(translate(translate('Change Color')), () async {
         final model = gFFI.abModel;
         Color oldColor = model.getCurrentAbTagColor(name);
-        Color newColor = await showColorPickerDialog(
-          context,
-          oldColor,
-          pickersEnabled: {
-            ColorPickerType.accent: false,
-            ColorPickerType.wheel: true,
-          },
-          pickerTypeLabels: {
-            ColorPickerType.primary: translate("Primary Color"),
-            ColorPickerType.wheel: translate("HSV Color"),
-          },
-          actionButtons: ColorPickerActionButtons(
-              dialogOkButtonLabel: translate("OK"),
-              dialogCancelButtonLabel: translate("Cancel")),
-          showColorCode: true,
-        );
+        // 临时禁用颜色选择器功能
+        // Color newColor = await showColorPickerDialog(
+        //   context,
+        //   oldColor,
+        //   pickersEnabled: {
+        //     ColorPickerType.accent: false,
+        //     ColorPickerType.wheel: true,
+        //   },
+        //   pickerTypeLabels: {
+        //     ColorPickerType.primary: translate("Primary Color"),
+        //     ColorPickerType.wheel: translate("HSV Color"),
+        //   },
+        //   actionButtons: ColorPickerActionButtons(
+        //       dialogOkButtonLabel: translate("OK"),
+        //       dialogCancelButtonLabel: translate("Cancel")),
+        //   showColorCode: true,
+        // );
+        Color newColor = oldColor; // 临时保持原色不变
         if (oldColor != newColor) {
           model.setTagColor(name, newColor);
         }

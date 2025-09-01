@@ -1608,6 +1608,31 @@ pub fn main_init(app_dir: String, custom_client_config: String) {
     initialize(&app_dir, &custom_client_config);
 }
 
+pub fn main_init_with_args(app_dir: String, custom_client_config: String, args: Vec<String>) {
+    // Set the command line arguments for the Rust side
+    // Convert args to a single string and set as environment variable
+    let args_str = args.join(" ");
+    std::env::set_var("RUSTDESK_ARGS", &args_str);
+    
+    // Also set individual argument environment variables for easier access
+    for (i, arg) in args.iter().enumerate() {
+        std::env::set_var(&format!("RUSTDESK_ARG_{}", i), arg);
+    }
+    
+    // Set specific argument environment variables
+    for arg in &args {
+        if arg.starts_with("--fullscreen=") {
+            std::env::set_var("RUSTDESK_FULLSCREEN", arg.strip_prefix("--fullscreen=").unwrap_or(""));
+        } else if arg.starts_with("--collapse_toolbar=") {
+            std::env::set_var("RUSTDESK_COLLAPSE_TOOLBAR", arg.strip_prefix("--collapse_toolbar=").unwrap_or(""));
+        } else if arg.starts_with("--desktop_scaling=") {
+            std::env::set_var("RUSTDESK_DESKTOP_SCALING", arg.strip_prefix("--desktop_scaling=").unwrap_or(""));
+        }
+    }
+    
+    initialize(&app_dir, &custom_client_config);
+}
+
 pub fn main_device_id(id: String) {
     *crate::common::DEVICE_ID.lock().unwrap() = id;
 }

@@ -43,12 +43,56 @@ pub fn core_main() -> Option<Vec<String>> {
     let mut _is_quick_support = false;
     let mut _is_flutter_invoke_new_connection = false;
     let mut no_server = false;
-    let mut arg_exe = Default::default();
+    // let mut arg_exe = Default::default();
+    // 为 `arg_exe` 显式指定 `String`
+    let mut arg_exe: String = Default::default();
     let mut fullscreen_mode: Option<bool> = None;
     let mut collapse_toolbar: Option<bool> = None;
     let mut desktop_scaling: Option<bool> = None;
 
-    for arg in std::env::args() {
+    // Check if we have arguments from Flutter or command line
+    let args_source = if let Ok(flutter_args) = std::env::var("RUSTDESK_ARGS") {
+        // Parse arguments from Flutter
+        let mut flutter_args_vec = vec![arg_exe.clone()];
+        flutter_args_vec.extend(flutter_args.split_whitespace().map(|s| s.to_string()));
+        flutter_args_vec
+    } else {
+        // Use regular command line arguments
+        std::env::args().collect()
+    };
+    
+    // Also check for specific argument environment variables
+    if fullscreen_mode.is_none() {
+        if let Ok(value) = std::env::var("RUSTDESK_FULLSCREEN") {
+            fullscreen_mode = match value.as_str() {
+                "true" => Some(true),
+                "false" => Some(false),
+                _ => None,
+            };
+        }
+    }
+    
+    if collapse_toolbar.is_none() {
+        if let Ok(value) = std::env::var("RUSTDESK_COLLAPSE_TOOLBAR") {
+            collapse_toolbar = match value.as_str() {
+                "true" => Some(true),
+                "false" => Some(false),
+                _ => None,
+            };
+        }
+    }
+    
+    if desktop_scaling.is_none() {
+        if let Ok(value) = std::env::var("RUSTDESK_DESKTOP_SCALING") {
+            desktop_scaling = match value.as_str() {
+                "true" => Some(true),
+                "false" => Some(false),
+                _ => None,
+            };
+        }
+    }
+
+    for arg in args_source {
         if i == 0 {
             arg_exe = arg;
         } else if i > 0 {
@@ -640,6 +684,19 @@ pub fn core_main() -> Option<Vec<String>> {
         if let Some(scaling) = desktop_scaling {
             flutter_args.push(format!("--desktop_scaling={}", if scaling { "true" } else { "false" }));
         }
+        
+        // If we have specific connection arguments, handle them directly
+        if args.contains(&"--connect".to_string()) || 
+           args.contains(&"--play".to_string()) || 
+           args.contains(&"--file-transfer".to_string()) || 
+           args.contains(&"--view-camera".to_string()) || 
+           args.contains(&"--port-forward".to_string()) || 
+           args.contains(&"--rdp".to_string()) {
+            // These arguments should be handled by the existing logic
+            // Don't start Flutter GUI, let the connection logic handle it
+            return None;
+        }
+        
         return Some(flutter_args);
     }
 

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
@@ -574,6 +575,40 @@ class _RemotePageState extends State<RemotePage>
           _ffi.canvasModel.updateViewStyle();
         }
       }
+    }
+    
+    // Also check environment variables set by Rust
+    try {
+      final fullscreen = Platform.environment['RUSTDESK_FULLSCREEN'];
+      if (fullscreen != null) {
+        if (fullscreen == 'true') {
+          _setFullscreen(true);
+        } else if (fullscreen == 'false') {
+          _setFullscreen(false);
+        }
+      }
+      
+      final collapseToolbar = Platform.environment['RUSTDESK_COLLAPSE_TOOLBAR'];
+      if (collapseToolbar != null) {
+        if (collapseToolbar == 'true') {
+          widget.toolbarState.show.value = false;
+        } else if (collapseToolbar == 'false') {
+          widget.toolbarState.show.value = true;
+        }
+      }
+      
+      final desktopScaling = Platform.environment['RUSTDESK_DESKTOP_SCALING'];
+      if (desktopScaling != null) {
+        if (desktopScaling == 'true') {
+          bind.sessionSetViewStyle(sessionId: sessionId, value: kRemoteViewStyleAdaptive);
+          _ffi.canvasModel.updateViewStyle();
+        } else if (desktopScaling == 'false') {
+          bind.sessionSetViewStyle(sessionId: sessionId, value: kRemoteViewStyleOriginal);
+          _ffi.canvasModel.updateViewStyle();
+        }
+      }
+    } catch (e) {
+      // Ignore environment variable errors
     }
   }
 

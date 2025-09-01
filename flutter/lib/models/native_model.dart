@@ -212,9 +212,11 @@ class PlatformFFI {
       await _ffiBind.mainDeviceId(id: id);
       await _ffiBind.mainDeviceName(name: name);
       await _ffiBind.mainSetHomeDir(home: _homeDir);
-      await _ffiBind.mainInit(
+      // Pass command line arguments to Rust
+      await _ffiBind.mainInitWithArgs(
         appDir: _dir,
         customClientConfig: '',
+        args: kBootArgs,
       );
     } catch (e) {
       debugPrintStack(label: 'initialize failed: $e');
