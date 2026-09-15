@@ -1,3 +1,34 @@
+# Copyright & License Notice / 版权与协议声明
+
+This repository is a **customized derivative work** based on the open-source project [RustDesk](https://github.com/rustdesk/rustdesk) (official upstream repository). All original copyright notices, license texts and author attributions of the upstream project are fully retained in this repository and its source files.
+
+本仓库是基于开源项目 [RustDesk](https://github.com/rustdesk/rustdesk)（官方上游仓库）的**定制修改衍生作品**。上游项目的全部原始版权声明、许可证文本及作者署名均完整保留于本仓库及其源码文件中。
+
+- **Upstream Project / 上游项目**: [https://github.com/rustdesk/rustdesk](https://github.com/rustdesk/rustdesk)
+- **Upstream License / 上游许可证**: [GNU Affero General Public License v3.0 (AGPL-3.0)](https://www.gnu.org/licenses/agpl-3.0.html)
+- **Derivative License / 衍生作品许可证**: This derivative work is licensed under **AGPL-3.0** as well. 本衍生作品同样遵循 **AGPL-3.0** 协议。
+
+## Derivative Modifications / 定制修改说明
+
+This customized version is based on RustDesk **1.4.1.83** and includes the following modifications:
+
+本定制版本基于 RustDesk **1.4.1.83**，主要修改包括：
+
+- Full-screen display / 全屏显示
+- Toolbar collapse / 工具栏折叠
+- Adaptive window scaling / 窗口自适应缩放
+- Hide window after connection / 连接后隐藏窗口
+
+## Usage Notice / 使用说明
+
+This project is a standalone application that invokes RustDesk only as an **external process**. If you use this software to provide services to end users over a network, please comply with the AGPL-3.0 terms: you have the right to obtain the complete modified source code as published in this repository.
+
+本项目作为独立程序，仅通过**外部进程调用** RustDesk。若您通过网络向终端用户提供本软件服务，请遵守 AGPL-3.0 协议条款：您有权获取本仓库发布的完整修改版源代码。
+
+For the full license text, please refer to the [LICENSE](LICENSE) file in this repository. 完整许可证文本请参见本仓库 [LICENSE](LICENSE) 文件。
+
+---
+
 <p align="center">
   <img src="res/logo-header.svg" alt="RustDesk - Your remote desktop"><br>
   <a href="#raw-steps-to-build">Build</a> •
